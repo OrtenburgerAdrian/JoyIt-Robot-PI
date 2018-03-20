@@ -1,0 +1,218 @@
+from __future__ import division
+import time
+import Adafruit_PCA9685
+import sys
+
+
+
+# Standardadresse: (0x40).
+#pwm = Adafruit_PCA9685.PCA9685()
+
+# Initialisierung mit alternativer Adresse
+pwm = Adafruit_PCA9685.PCA9685(address=0x41)
+
+# Frequenz auf 50Hz setzen
+pwm.set_pwm_freq(50)
+
+# Einstellen der Minimal-und Maximal-Pulslaengen
+servo_min = 150 # Minimale Pulslaenge
+servo_max = 600 # Maximale Pulslaenge
+
+
+def set_servo_pulse (channel, pulse):
+	pulse_length = 1000000
+	pulse_length /= 50
+	pulse_length /= 4096
+	pulse *= 1000
+	pulse /= pulse_length
+	pulse = round(pulse)
+	pulse = int(pulse)
+	pwm.set_pwm(channel, 0, pulse)
+
+
+
+class RunServo():
+	a0 = 0.0
+	a1 = 0.0
+	a2 = 0.0
+	a3 = 0.0
+	a4 = 0.0
+	a5 = 0.0
+	c0 = 0.0
+	c1 = 0.0
+	c2 = 0.0
+	c3 = 0.0
+	c4 = 0.0
+	c5 = 0.0
+	e  = 0.01
+
+	def setServo(self):
+		set_servo_pulse(0,self.c0)
+		set_servo_pulse(1,self.c1)
+		set_servo_pulse(2,self.c2)
+		set_servo_pulse(3,self.c3)
+		set_servo_pulse(4,self.c4)
+		set_servo_pulse(5,self.c5)
+		return
+
+
+
+	def run(self,a0,a1,a2,a3,a4,a5):
+		step_length = 0.01
+		sleep_length = 0.03
+		
+
+		if a0 ==0:
+			self.c0=a0
+		if a1 ==0:
+			self.c1=a1
+		if a2 ==0:
+			self.c2=a2
+		if a3 ==0:
+			self.c3=a3
+		if a4 ==0:
+			self.c4=a4
+		if a5 ==0:
+			self.c5=a5
+
+		self.setServo()
+
+		#print(a0,self.c0,"	",a1,self.c1,"	",a2,self.c2,"	",a3,self.c3,"	",a4,self.c4,"	",a5,self.c5)
+		
+		e0 = 99
+		e1 = 99
+		e2 = 99
+		e3 = 99
+		e4 = 99
+		e5 = 99
+
+		while (e0==99 or e1==99 or e2==99 or e3 ==99 or e4==99 or e5==99):
+		#(abs(a0-self.c0)<self.e or abs(a1-self.c1)<self.e or abs(a2-self.c2)<self.e or abs(a3-self.c3)<self.e or abs(a4-self.c4)<self.e or abs(a5-self.c5)<self.e):
+			#print(abs(a0-self.c0),abs(a1-self.c1),abs(a1-self.c1),abs(a1-self.c1),abs(a1-self.c1),abs(a1-self.c1))
+			#print("in der while",e0,e1,e2,e3,e4,e5)
+			
+			
+			
+			
+			if (abs(a0-self.c0)>self.e):
+				if self.c0 < a0:
+					self.c0= self.c0+step_length
+				elif self.c0 > a0:
+					self.c0= self.c0-step_length
+			else :
+				e0=0
+
+			if (abs(a1-self.c1)>self.e):
+				if self.c1 < a1:
+					self.c1= self.c1+step_length
+				elif self.c1 > a1:
+					self.c1= self.c1-step_length
+			else :
+				e1=0
+
+			if (abs(a2-self.c2)>self.e):
+				if self.c2 < a2:
+					self.c2= self.c2+step_length
+				elif self.c2 > a2:
+					self.c2= self.c2-step_length
+			else :
+				e2=0
+
+			if (abs(a3-self.c3)>self.e):
+				if self.c3 < a3:
+					self.c3= self.c3+step_length
+				elif self.c3 > a3:
+					self.c3= self.c3-step_length
+			else :
+				e3=0
+
+			if (abs(a4-self.c4)>self.e):
+				if self.c4 < a4:
+					self.c4= self.c4+step_length
+				elif self.c4 > a4:
+					self.c4= self.c4-step_length
+			else :
+				e4=0
+
+			if (abs(a5-self.c5)>self.e):
+				if self.c5 < a5:
+					self.c5= self.c5+step_length
+				elif self.c5 > a5:
+					self.c5= self.c5-step_length
+			else :
+				e5=0
+			#print(a0,self.c0,"/n",a1,self.c1,"/n",a2,self.c2,"/t",a3,self.c3,"/t",a4,self.c4,"/t",a5,self.c5,"/t")
+
+			self.setServo()
+			time.sleep(sleep_length)
+
+		self.c0=a0
+		self.c1=a1
+		self.c2=a2
+		self.c3=a3
+		self.c4=a4
+		self.c5=a5
+		time.sleep(2)
+		#print("ende der while")
+		return
+
+
+#open
+def open():
+	servo5=1.7
+	RUN.run(0,0,0,0,0,1.7)
+	return
+	
+#close
+def close():
+	servo5=1
+	RUN.run(0,0,0,0,0,1)
+	return
+	
+#go R
+def go_R():
+	RUN.run(2.5,1.3,2.2,1.5,0.9,0)
+	return
+	
+#go L
+def go_L():
+	RUN.run(0.7,1.3,2.2,1.5,0.9,0)
+	return
+	
+#go M
+def go_M():
+	RUN.run(1.7,0.9,1.4,1.5,0.9,0)
+	return
+	
+# init pos
+#print("try init")
+RUN = RunServo()
+RUN.run(1.7,0.9,1.4,1.5,0.9,0)
+
+
+while True:
+	#print("Hallo")
+	run_prog = input("0=mitte,1=rechts,2=links,3=open,4=close\n")
+		
+	if run_prog ==0:
+		print("mitte")
+		go_M()
+
+	elif run_prog == 1:
+		print("rechts")
+		go_R()
+
+	elif run_prog == 2:
+		print("links")
+		go_L()
+
+	elif run_prog == 3:
+		print("open")
+		open()
+
+	elif run_prog == 4:
+		print("close")
+		close()
+
+	else :
+		print("fehler")

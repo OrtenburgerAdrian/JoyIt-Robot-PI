@@ -1,0 +1,171 @@
+from __future__ import division
+import time
+import Adafruit_PCA9685
+import sys
+
+
+
+# Standardadresse: (0x40).
+#pwm = Adafruit_PCA9685.PCA9685()
+
+# Initialisierung mit alternativer Adresse
+pwm = Adafruit_PCA9685.PCA9685(address=0x41)
+
+# Frequenz auf 50Hz setzen
+pwm.set_pwm_freq(50)
+
+# Einstellen der Minimal-und Maximal-Pulslaengen
+servo_min = 150 # Minimale Pulslaenge
+servo_max = 600 # Maximale Pulslaenge
+
+#Die Position, in welche die Servos bewegt werden sollen, hier nur init.
+servo_target = [0.0,0.0,0.0,0.0,0.0,0.0]
+
+#Diese Funktion bewegt die Servos
+def set_servo_pulse (channel, pulse):
+	pulse_length = 1000000
+	pulse_length /= 50
+	pulse_length /= 4096
+	pulse *= 1000
+	pulse /= pulse_length
+	pulse = round(pulse)
+	pulse = int(pulse)
+	pwm.set_pwm(channel, 0, pulse)
+
+#Diese Klasse weis wie die Servos grade stehen und kann die Bewegung der Servos verlangsamen. 
+class RunServo():
+	#die Position in welcher sich die Servos grade befinden
+	servo_pos  = [0.0,0.0,0.0,0.0,0.0,0.0]
+	#die Fehlertolleranz für die Position
+	e  = 0.001
+
+	#Diese Funktion bewegt alle 6 Servos gleichzeitig
+	def setServo(self):
+		set_servo_pulse(0,self.servo_pos[0])
+		set_servo_pulse(1,self.servo_pos[1])
+		set_servo_pulse(2,self.servo_pos[2])
+		set_servo_pulse(3,self.servo_pos[3])
+		set_servo_pulse(4,self.servo_pos[4])
+		set_servo_pulse(5,self.servo_pos[5])
+		return
+		
+	#Bewegt die Servos langsam zur Target-Pos.
+	def run(self,servo_target[]):
+		#Schrittweite der Servos bis zur nächsten Pause
+		step_length = 0.01
+		#Pausenlänge
+		sleep_length = 0.03
+		
+		#Wird nur beim erstmaligen aufrufen der 'run' Funktion gebraucht, der Arm wird schnell in seine Ruhelage bewegt.
+		if servo_target[0] ==0:
+			self.servo_pos[0]=servo_target[0]
+		if servo_target[1] ==0:
+			self.servo_pos[1]=servo_target[1]
+		if servo_target[2] ==0:
+			self.servo_pos[2]=servo_target[2]
+		if servo_target[3] ==0:
+			self.servo_pos[3]=servo_target[3]
+		if servo_target[4] ==0:
+			self.servo_pos[4]=servo_target[4]
+		if servo_target[5] ==0:
+			self.servo_pos[5]=servo_target[5]
+		self.setServo()
+		
+		#Diese Liste stellt dar, welche Servos sich noch bewegen. (0=Zielpos. erreicht)
+		pos_reached = [1,1,1,1,1,1]
+		
+		#Solange nicht alle Servos ihr Ziel erreicht haben wird diese Schleife ausgeführt
+		while (pos_reached[0]==1 or pos_reached[1]==1 or pos_reached[2]==1 or pos_reached[3] ==1 or pos_reached[4]==1 or pos_reached[5]==1):
+			
+			#legt den nächsten Schritt der Servos fest und fürt ihn aus, 
+			#wenn die Zielpos. erreicht ist, wird pos_reached[i] auf 0 gesätzt
+			for( i = 0; i <= 5; i++):
+				if (abs(servo_target[i]-self.servo_pos[i])>self.e):
+					if self.servo_pos[i] < servo_target[i]:
+						self.servo_pos[i]= self.servo_pos[i]+step_length
+					elif self.servo_pos[i] > servo_target[i]:
+						self.servo_pos[i]= self.servo_pos[i]-step_length
+				else :
+					pos_reached[i]=0		
+			self.setServo()
+			#Pause für den Slowdown der Bewegung
+			time.sleep(sleep_length)
+		
+		#Paue um den Arm nach einem kompletten bewegungszyklus zur Ruhe kommen zu lassen.
+		time.sleep(2)
+		return
+		
+
+
+#öfne die Kralle
+def open():
+	servo_target[5]=1.7
+	RUN.run(servo_target)
+	return
+	
+#schließe die Kralle
+def close():
+	servo_target[5]=1
+	RUN.run(servo_target)
+	return
+	
+#bewege den Arm nach R.
+def go_R():
+	servo_target[0]=2.5
+	servo_target[1]=1.3
+	servo_target[2]=2.2
+	servo_target[3]=1.5
+	servo_target[4]=0.9
+	RUN.run(servo_target)
+	return
+	
+#bewege den Arm nach L.
+def go_L():
+	servo_target[0]=0.7
+	servo_target[1]=1.3
+	servo_target[2]=2.2
+	servo_target[3]=1.5
+	servo_target[4]=0.9
+	RUN.run(servo_target)
+	return
+	
+#bewege den Arm in die Mitte
+def go_M():
+	servo_target[0]=1.7
+	servo_target[1]=0.9
+	servo_target[2]=1.4
+	servo_target[3]=1.5
+	servo_target[4]=0.9
+	RUN.run(servo_target)
+	return
+	
+# init pos
+RUN = RunServo()
+go_M()
+
+#um den Arm über die Console steuern zu können.
+while True:
+	run_prog = input("0=mitte,1=rechts,2=links,3=open,4=close\n")
+		
+	if run_prog ==0:
+		print("mitte")
+		go_M()
+
+	elif run_prog == 1:
+		print("rechts")
+		go_R()
+
+	elif run_prog == 2:
+		print("links")
+		go_L()
+
+	elif run_prog == 3:
+		print("open")
+		open()
+
+	elif run_prog == 4:
+		print("close")
+		close()
+
+	else :
+		print("fehler")
